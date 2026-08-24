@@ -1,9 +1,103 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>طباعة الجداول — حجز المدرسة</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--brand:#17365d;--blue:#2563eb}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1500px;margin:auto;padding:18px}.hero{background:linear-gradient(135deg,#17365d,#28547f);color:#fff;border-radius:16px;padding:20px;margin-bottom:12px}.hero h1{margin:0 0 6px}.hero p{margin:0;color:#d9e6f3;font-size:13px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}select,button{padding:10px;border-radius:9px;border:1px solid #cbd5e1}select{width:100%;background:#fff}button{background:var(--blue);color:#fff;border:0;font-weight:800;cursor:pointer}.secondary{background:#eef2f7;color:var(--ink)}.scroll{overflow:auto}.teacher-table{min-width:950px}.teacher-table th,.teacher-table td{border:1px solid #333;padding:7px;text-align:center;font-size:11px}.teacher-table th{background:#eef3f8}.slot{height:48px;vertical-align:middle}.small{font-size:10px;color:#667085}.all-table{min-width:1450px}.all-table th,.all-table td{border:1px solid #333;padding:4px;text-align:center;font-size:8.5px}.all-table th{background:#eef3f8}.muted{color:var(--muted);font-size:12px}.ok{color:#067647}.bad{color:#b42318}@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:620px){.grid{grid-template-columns:1fr}}@media print{body{background:#fff}.no-print{display:none!important}.card{border:0;padding:0}.hero{display:none}.teacher-table th,.teacher-table td{font-size:10px;padding:5px}.all-table th,.all-table td{font-size:7px;padding:3px}@page{size:A4 landscape;margin:7mm}}</style></head><body><div class="wrap"><div class="hero no-print"><h1>طباعة جداول المدرسة</h1><p>التقارير تُبنى مباشرة من الحجوزات المحفوظة في قاعدة البيانات.</p></div><div class="card no-print"><div class="grid"><div><label>المعلم</label><select id="teacher"></select></div><div><label>نوع التقرير</label><select id="reportType"><option value="teacher">جدول معلم مستقل</option><option value="all">الجدول العام لجميع المعلمين</option></select></div><div><label>&nbsp;</label><button id="printBtn">🖨️ طباعة التقرير</button></div></div><div class="row" style="margin-top:10px"><button class="secondary" id="refreshBtn">تحديث الحجوزات</button><button class="secondary" id="backBtn">العودة</button><button class="secondary" id="allBtn">الجدول العام</button></div><div id="msg" class="muted" style="margin-top:8px"></div></div><div class="card"><div id="preview"></div></div></div><script>
-const SUPABASE_URL='https://yqbhxeotqbyygbntazws.supabase.co';const SUPABASE_KEY='sb_publishable_1N-Q_hswv_veUAZkIUD3zw_iv4Z-C9e';const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس'];const PERIODS=7;let teachers=[],bookings=[];const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function teacherTable(t){let h=`<h2>جدول المعلم — ${esc(t.teacher_name)}</h2><p class="muted">المطلوب: ${t.required_lessons} حصة</p><table class="teacher-table"><thead><tr><th>الحصة</th>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>`;for(let p=1;p<=PERIODS;p++){h+=`<tr><th>${p}</th>`;for(const d of DAYS){const xs=bookings.filter(b=>b.teacher_id===t.teacher_id&&b.day_name===d&&b.period===p);h+=`<td class="slot">${xs.map(x=>`<b>${esc(x.subject||'')}</b><br><span class="small">${esc(x.class_name||'')}</span>`).join('<hr>')||'—'}</td>`}h+='</tr>'}return h+'</tbody></table>'}
-function allTeachers(){let h='<h1>الجدول العام لجميع المعلمين</h1><p class="muted">كل صف يمثل معلمًا، وكل خلية تعرض المادة والفصل المحجوز لذلك المعلم.</p><table class="all-table"><thead><tr><th>المعلم</th>';DAYS.forEach(d=>{for(let p=1;p<=PERIODS;p++)h+=`<th>${d}<br>${p}</th>`});h+='</tr></thead><tbody>';for(const t of teachers){h+=`<tr><th>${esc(t.teacher_name)}</th>`;for(const d of DAYS){for(let p=1;p<=PERIODS;p++){const xs=bookings.filter(b=>b.teacher_id===t.teacher_id&&b.day_name===d&&b.period===p);h+=`<td>${xs.map(x=>`${esc(x.subject||'')}<br><span class="small">${esc(x.class_name||'')}</span>`).join('<hr>')||'—'}</td>`}}h+='</tr>'}return h+'</tbody></table>'}
-function render(){const type=$('reportType').value;const t=teachers.find(x=>x.teacher_id===$('teacher').value);$('preview').innerHTML=type==='all'?allTeachers():t?teacherTable(t):'<p>لم يتم اختيار معلم.</p>'}
-async function load(){const {data,error}=await sb.rpc('get_schedule_report');if(error){$('msg').innerHTML=`<span class="bad">تعذر تحميل البيانات: ${esc(error.message)}</span>`;return}const rows=data||[];const map=new Map();for(const r of rows){if(!map.has(r.teacher_id))map.set(r.teacher_id,{teacher_id:r.teacher_id,teacher_name:r.teacher_name,required_lessons:r.required_lessons});}teachers=[...map.values()];bookings=rows.filter(r=>r.booking_id).map(r=>({...r}));$('teacher').innerHTML=teachers.map(t=>`<option value="${t.teacher_id}">${esc(t.teacher_name)}</option>`).join('');const q=new URLSearchParams(location.search).get('teacher');if(q){const t=teachers.find(t=>t.teacher_name===q);if(t)$('teacher').value=t.teacher_id}$('reportType').value=new URLSearchParams(location.search).get('all')==='1'?'all':'teacher';$('msg').innerHTML=`<span class="ok">تم تحميل ${bookings.length} حجزًا محفوظًا من قاعدة البيانات.</span>`;render()}
-function print(){const title=$('reportType').value==='all'?'الجدول العام لجميع المعلمين':`جدول المعلم — ${$('teacher').selectedOptions[0]?.text||''}`;const body=$('preview').innerHTML;const w=window.open('','_blank');if(!w){alert('اسمح بالنوافذ المنبثقة للطباعة.');return}w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Tahoma,Arial,sans-serif;color:#111;padding:10px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #333;padding:5px;text-align:center}th{background:#eee}.teacher-table th,.teacher-table td{font-size:10px}.all-table th,.all-table td{font-size:7px;padding:3px}.small{font-size:9px;color:#444}@page{size:A4 landscape;margin:7mm}</style></head><body>${body}</body></html>`);w.document.close();setTimeout(()=>w.print(),250)}
-$('teacher').onchange=()=>{history.replaceState(null,'',`reports.html?teacher=${encodeURIComponent(teachers.find(t=>t.teacher_id===$('teacher').value)?.teacher_name||'')}`);render()};$('reportType').onchange=render;$('refreshBtn').onclick=load;$('printBtn').onclick=print;$('allBtn').onclick=()=>{$('reportType').value='all';history.replaceState(null,'','reports.html?all=1');render()};$('backBtn').onclick=()=>location.href='index.html';load();
-</script></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>طباعة جداول المدرسة</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#cbd5e1;--brand:#17365d;--blue:#2563eb;--day:#eef2f5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1600px;margin:auto;padding:18px}
+.hero{background:linear-gradient(135deg,#17365d,#28547f);color:#fff;border-radius:16px;padding:20px;margin-bottom:12px}.hero h1{margin:0 0 6px}.hero p{margin:0;color:#d9e6f3;font-size:13px}
+.card{background:#fff;border:1px solid #d9e1ec;border-radius:14px;padding:16px;margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}select,button{padding:10px;border-radius:9px;border:1px solid #cbd5e1}select{width:100%;background:#fff}button{background:var(--blue);color:#fff;border:0;font-weight:800;cursor:pointer}.secondary{background:#eef2f7;color:var(--ink)}
+.scroll{overflow:auto}.muted{color:var(--muted);font-size:12px}.ok{color:#067647}.bad{color:#b42318}
+table{border-collapse:collapse;width:100%}.teacher-table{min-width:950px}.teacher-table th,.teacher-table td{border:1px solid #333;padding:7px;text-align:center;font-size:11px}.teacher-table th{background:#eef3f8}.slot{height:48px;vertical-align:middle}.small{font-size:10px;color:#667085}
+.all-table{min-width:1550px;table-layout:fixed}.all-table th,.all-table td{border:1px solid #aeb8c5;padding:5px;text-align:center;font-size:8.5px}.all-table .teacher-col{width:110px;background:#e9eef3;font-size:10px}.all-table .day-head{background:#dfe5ea;font-size:11px;font-weight:800;border-left:3px solid #6b7280}.all-table .period-head{background:#f3f5f7;font-weight:800}.all-table .day-a{background:#fff}.all-table .day-b{background:#f1f3f5}.all-table .day-end{border-left:3px solid #6b7280!important}.all-table .day-head.day-end{border-left:3px solid #4b5563!important}.all-table .period-head.day-b{background:#e6e9ec}
+@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:620px){.grid{grid-template-columns:1fr}}
+@media print{body{background:#fff}.no-print{display:none!important}.card{border:0;padding:0}.hero{display:none}.all-table th,.all-table td{font-size:7px;padding:3px}.teacher-table th,.teacher-table td{font-size:10px;padding:5px}@page{size:A4 landscape;margin:7mm}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero no-print"><h1>طباعة جداول المدرسة</h1><p>التقارير مبنية مباشرة من الحجوزات المحفوظة في قاعدة البيانات.</p></div>
+<div class="card no-print">
+<div class="grid">
+<div><label>المعلم</label><select id="teacher"></select></div>
+<div><label>نوع التقرير</label><select id="reportType"><option value="teacher">جدول معلم مستقل</option><option value="all">الجدول العام لجميع المعلمين</option></select></div>
+<div><label>&nbsp;</label><button id="printBtn">🖨️ طباعة التقرير</button></div>
+</div>
+<div class="row" style="margin-top:10px"><button class="secondary" id="refreshBtn">تحديث الحجوزات</button><button class="secondary" id="backBtn">العودة</button><button class="secondary" id="allBtn">الجدول العام</button></div>
+<div id="msg" class="muted" style="margin-top:8px"></div>
+</div>
+<div class="card"><div id="preview"></div></div>
+</div>
+<script>
+const SUPABASE_URL='https://yqbhxeotqbyygbntazws.supabase.co';
+const SUPABASE_KEY='sb_publishable_1N-Q_hswv_veUAZkIUD3zw_iv4Z-C9e';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس'];const PERIODS=7;
+let teachers=[],bookings=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const dayClass=i=>i%2===0?'day-a':'day-b';
+
+function teacherTable(t){
+ let h=`<h2>جدول المعلم — ${esc(t.teacher_name)}</h2><table class="teacher-table"><thead><tr><th>الحصة</th>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>`;
+ for(let p=1;p<=PERIODS;p++){
+  h+=`<tr><th>${p}</th>`;
+  DAYS.forEach(d=>{const xs=bookings.filter(b=>b.teacher_id===t.teacher_id&&b.day_name===d&&b.period===p);h+=`<td class="slot">${xs.map(x=>`<b>${esc(x.subject||'')}</b><br><span class="small">${esc(x.class_name||'')}</span>`).join('<hr>')||'—'}</td>`});
+  h+='</tr>';
+ }
+ return h+'</tbody></table>';
+}
+
+function allTeachers(){
+ let h='<h1>الجدول العام لجميع المعلمين</h1><p class="muted">كل يوم يحتوي على 7 حصص. تم تمييز الأيام بالتناوب، مع فاصل رأسي واضح بين كل يوم واليوم الذي يليه.</p>';
+ h+='<div class="scroll"><table class="all-table"><thead><tr><th class="teacher-col" rowspan="2">المعلم</th>';
+ DAYS.forEach((d,i)=>{h+=`<th colspan="7" class="day-head ${dayClass(i)} ${i>0?'day-end':''}">${d}</th>`});
+ h+='</tr><tr>';
+ DAYS.forEach((d,i)=>{for(let p=1;p<=PERIODS;p++){h+=`<th class="period-head ${dayClass(i)} ${p===7?'day-end':''}">${p}</th>`}});
+ h+='</tr></thead><tbody>';
+ for(const t of teachers){
+  h+=`<tr><th class="teacher-col">${esc(t.teacher_name)}</th>`;
+  DAYS.forEach((d,i)=>{for(let p=1;p<=PERIODS;p++){
+   const xs=bookings.filter(b=>b.teacher_id===t.teacher_id&&b.day_name===d&&b.period===p);
+   h+=`<td class="${dayClass(i)} ${p===7?'day-end':''}">${xs.map(x=>`${esc(x.subject||'')}<br><span class="small">${esc(x.class_name||'')}</span>`).join('<hr>')||'—'}</td>`;
+  }});
+  h+='</tr>';
+ }
+ return h+'</tbody></table></div>';
+}
+
+function render(){
+ const type=$('reportType').value;const t=teachers.find(x=>x.teacher_id===$('teacher').value);
+ $('preview').innerHTML=type==='all'?allTeachers():t?teacherTable(t):'<p>لم يتم اختيار معلم.</p>';
+}
+
+async function load(){
+ const {data,error}=await sb.rpc('get_schedule_report');
+ if(error){$('msg').innerHTML=`<span class="bad">تعذر تحميل البيانات: ${esc(error.message)}</span>`;return}
+ const rows=data||[];const map=new Map();
+ for(const r of rows){if(!map.has(r.teacher_id))map.set(r.teacher_id,{teacher_id:r.teacher_id,teacher_name:r.teacher_name});}
+ teachers=[...map.values()];bookings=rows.filter(r=>r.booking_id).map(r=>({...r}));
+ $('teacher').innerHTML=teachers.map(t=>`<option value="${t.teacher_id}">${esc(t.teacher_name)}</option>`).join('');
+ const params=new URLSearchParams(location.search);const q=params.get('teacher');
+ if(q){const t=teachers.find(t=>t.teacher_name===q);if(t)$('teacher').value=t.teacher_id}
+ $('reportType').value=params.get('all')==='1'?'all':'teacher';
+ $('msg').innerHTML=`<span class="ok">تم تحميل ${bookings.length} حجزًا محفوظًا من قاعدة البيانات.</span>`;render();
+}
+
+function print(){
+ const title=$('reportType').value==='all'?'الجدول العام لجميع المعلمين':`جدول المعلم — ${$('teacher').selectedOptions[0]?.text||''}`;
+ const body=$('preview').innerHTML;const w=window.open('','_blank');if(!w){alert('اسمح بالنوافذ المنبثقة للطباعة.');return}
+ w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+ body{font-family:Tahoma,Arial,sans-serif;color:#111;padding:10px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #333;padding:4px;text-align:center}th{background:#eee}.all-table{min-width:1550px;table-layout:fixed}.all-table th,.all-table td{font-size:7px}.all-table .teacher-col{width:105px;background:#e9eef3}.all-table .day-head{background:#dfe5ea;font-size:10px;border-left:3px solid #555}.all-table .period-head{background:#f3f5f7}.all-table .day-a{background:#fff}.all-table .day-b{background:#f1f3f5}.all-table .day-end{border-left:3px solid #555!important}.small{font-size:8px;color:#444}@page{size:A4 landscape;margin:7mm}
+ </style></head><body>${body}</body></html>`);w.document.close();setTimeout(()=>w.print(),250);
+}
+
+$('teacher').onchange=()=>{const n=teachers.find(t=>t.teacher_id===$('teacher').value)?.teacher_name||'';history.replaceState(null,'',`reports.html?teacher=${encodeURIComponent(n)}`);render()};
+$('reportType').onchange=()=>{history.replaceState(null,'',`reports.html${$('reportType').value==='all'?'?all=1':''}`);render()};
+$('refreshBtn').onclick=load;$('printBtn').onclick=print;$('allBtn').onclick=()=>{$('reportType').value='all';history.replaceState(null,'','reports.html?all=1');render()};$('backBtn').onclick=()=>location.href='index.html';
+load();
+</script>
+</body></html>
