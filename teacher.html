@@ -1,11 +1,18 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>حجز جدول المعلم</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--brand:#17365d;--blue:#2563eb;--green:#087443;--red:#b42318;--gold:#9a6a00}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1400px;margin:auto;padding:18px}.top{display:grid;grid-template-columns:2fr 1fr;gap:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px #00000008}.hero{background:linear-gradient(135deg,#17365d,#28547f);color:#fff}.hero h1{margin:0 0 5px}.hero p{margin:0;color:#d9e6f3;font-size:13px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{font-size:28px;font-weight:900}.muted{color:var(--muted);font-size:12px}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pill{display:inline-block;padding:4px 9px;border-radius:999px;background:#edf2ff;color:#2444a3;font-size:11px;margin:2px}.gold{background:#fff3bf;color:#805d00}.ok{color:#067647;background:#ecfdf3}.bad{color:#b42318;background:#fef3f2}.warn{color:#a15c00;background:#fffaeb}.alert{padding:10px;border-radius:10px;margin:8px 0;font-size:13px}.select{padding:10px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;min-width:280px}button{border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--blue);color:#fff}.secondary{background:#eef2f7;color:var(--ink)}.danger{background:#fee2e2;color:#991b1b}.progress{height:9px;background:#e8edf4;border-radius:99px;overflow:hidden;margin-top:6px}.progress>span{display:block;height:100%;background:#2563eb}.assignments{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.a{border:1px solid var(--line);border-radius:10px;padding:10px}.a strong{display:block}.schedule-scroll{overflow:auto}.schedule{width:100%;border-collapse:collapse;min-width:900px;font-size:12px}.schedule th,.schedule td{border:1px solid var(--line);padding:8px;text-align:center}.schedule th{background:#eef3f8}.slot{height:55px;vertical-align:middle}.available{background:#ecfdf3;color:#067647;cursor:pointer}.mine{background:#dbeafe;color:#1d4ed8;cursor:pointer}.taken{background:#fef3f2;color:#b42318}.fixed{background:#eef2f7;color:#667085}.selected{outline:3px solid #2563eb;outline-offset:-3px}.small{font-size:10px;color:inherit}.online{color:#067647}.offline{color:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1400px;margin:auto;padding:18px}
+.top{display:grid;grid-template-columns:2fr 1fr;gap:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px #00000008}.hero{background:linear-gradient(135deg,#17365d,#28547f);color:#fff}.hero h1{margin:0 0 5px}.hero p{margin:0;color:#d9e6f3;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{font-size:28px;font-weight:900}.muted{color:var(--muted);font-size:12px}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pill{display:inline-block;padding:4px 9px;border-radius:999px;background:#edf2ff;color:#2444a3;font-size:11px;margin:2px}.gold{background:#fff3bf;color:#805d00}
+.ok{color:#067647;background:#ecfdf3}.bad{color:#b42318;background:#fef3f2}.warn{color:#a15c00;background:#fffaeb}.alert{padding:10px;border-radius:10px;margin:8px 0;font-size:13px}.select{padding:10px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;min-width:280px}button{border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--blue);color:#fff}.secondary{background:#eef2f7;color:var(--ink)}.danger{background:#fee2e2;color:#991b1b}
+.assignments{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.a{border:1px solid var(--line);border-radius:10px;padding:10px}.a strong{display:block}.progress{height:9px;background:#e8edf4;border-radius:99px;overflow:hidden;margin-top:6px}.progress>span{display:block;height:100%;background:#2563eb}
+.schedule-scroll{overflow:auto}.schedule{width:100%;border-collapse:collapse;min-width:900px;font-size:12px}.schedule th,.schedule td{border:1px solid var(--line);padding:8px;text-align:center}.schedule th{background:#eef3f8}.slot{height:55px;vertical-align:middle}.available{background:#ecfdf3;color:#067647;cursor:pointer}.mine{background:#dbeafe;color:#1d4ed8;cursor:pointer}.taken{background:#fef3f2;color:#b42318}.fixed{background:#eef2f7;color:#667085}.selected{outline:3px solid #2563eb;outline-offset:-3px}.small{font-size:10px;color:inherit}
 @media(max-width:900px){.top{grid-template-columns:1fr}.assignments{grid-template-columns:1fr}.wrap{padding:10px}}
 </style>
 </head>
@@ -15,79 +22,75 @@
 <div class="card hero"><h1 id="teacherName">جاري التحميل…</h1><p id="teacherMeta">جارٍ تحميل بياناتك وقواعد الحجز.</p></div>
 <div class="card"><div class="row"><span id="status" class="pill">الاتصال…</span><button class="secondary" id="backBtn">العودة للمعلمين</button></div><div id="notice"></div></div>
 </div>
-<div class="stats">
-<div class="card"><div id="required" class="stat">—</div><div class="muted">المطلوب</div></div>
-<div class="card"><div id="booked" class="stat">—</div><div class="muted">المحجوز</div></div>
-<div class="card"><div id="remaining" class="stat">—</div><div class="muted">المتبقي</div></div>
-</div>
+<div class="stats"><div class="card"><div id="required" class="stat">—</div><div class="muted">المطلوب</div></div><div class="card"><div id="booked" class="stat">—</div><div class="muted">المحجوز</div></div><div class="card"><div id="remaining" class="stat">—</div><div class="muted">المتبقي</div></div></div>
 <div class="card"><h3>التوزيع المطلوب</h3><div id="assignments" class="assignments"></div></div>
-<div class="card">
-<div class="row"><select id="assignment" class="select"></select><button id="bookBtn">حجز الخانة المحددة</button><button id="releaseBtn" class="danger">إلغاء حجزك</button><span class="muted" id="selectedText">لم تحدد خانة.</span></div>
-<div id="actionMessage"></div>
-</div>
+<div class="card"><div class="row"><select id="assignment" class="select"></select><button id="bookBtn">حجز الخانة المحددة</button><button id="releaseBtn" class="danger">إلغاء حجزك</button><span class="muted" id="selectedText">لم تحدد خانة.</span></div><div id="actionMessage"></div></div>
 <div class="card"><div class="row"><h3 style="margin:0">جدول الحجز الحي</h3><span class="muted">يتحدث تلقائيًا كل 3 ثوانٍ</span></div><div class="schedule-scroll" style="margin-top:10px"><table class="schedule"><thead><tr><th>الحصة</th><th>الأحد</th><th>الإثنين</th><th>الثلاثاء</th><th>الأربعاء</th><th>الخميس</th></tr></thead><tbody id="grid"></tbody></table></div></div>
 </div>
 <script>
-const API='https://yqbhxeotqbyygbntazws.supabase.co/functions/v1/booking-api';
+const SUPABASE_URL='https://yqbhxeotqbyygbntazws.supabase.co';
+const SUPABASE_KEY='sb_publishable_1N-Q_hswv_veUAZkIUD3zw_iv4Z-C9e';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس'];
-const teacher=new URLSearchParams(location.search).get('teacher')||'';
+const teacherName=new URLSearchParams(location.search).get('teacher')||'';
+let teacher=null,assignments=[],bookings=[],selected=null,timer=null;
 const $=id=>document.getElementById(id);
-let model=null,selected=null,pollTimer=null;
-function escapeHtml(s){return String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
-function setNotice(text,kind='ok',target='notice'){ $(target).innerHTML=`<div class="alert ${kind}">${text}</div>`; }
-async function api(url='',opts={}){
- const r=await fetch(API+url,{...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}});
- let body=null;try{body=await r.json()}catch(e){body={error:'استجابة غير مفهومة'}}
- if(!r.ok) throw new Error(body.error||`HTTP ${r.status}`); return body;
-}
-function assignmentKey(a){return a.id;}
-function getBookedMine(){return (model?.bookings||[]).filter(x=>x.teacher_id===model.teacher.id && x.status==='booked');}
-function assignmentCounts(){const counts={};getBookedMine().forEach(x=>counts[x.assignment_id]=(counts[x.assignment_id]||0)+1);return counts;}
-function renderAssignments(){const counts=assignmentCounts(); $('assignments').innerHTML=(model.assignments||[]).map(a=>{const n=counts[a.id]||0;const pct=Math.min(100,Math.round(n/Math.max(1,a.required_lessons)*100));return `<div class="a"><strong>${escapeHtml(a.subject)} — ${escapeHtml(a.class_name)}</strong><span class="muted">${n} / ${a.required_lessons}</span><div class="progress"><span style="width:${pct}%"></span></div></div>`}).join('')||'<div class="muted">لا توجد إسنادات لهذا المعلم.</div>';}
-function renderAssignmentSelect(){const counts=assignmentCounts();$('assignment').innerHTML=(model.assignments||[]).map(a=>{const n=counts[a.id]||0;return `<option value="${escapeHtml(a.id)}" ${n>=a.required_lessons?'disabled':''}>${escapeHtml(a.subject)} — ${escapeHtml(a.class_name)} (${n}/${a.required_lessons})</option>`}).join('')||'<option value="">لا توجد إسنادات</option>';}
-function slotState(day,p){
- if(teacher==='قرناس المطيري'&&day==='الخميس'&&!([1,7].includes(p))) return 'fixed';
- const b=(model.bookings||[]).find(x=>x.day_name===day&&x.period===p&&x.status==='booked');
- if(!b) return 'available'; if(b.teacher_id===model.teacher.id) return 'mine'; return 'taken';
-}
-function renderGrid(){
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function show(text,kind='ok',target='notice'){$(target).innerHTML=`<div class="alert ${kind}">${esc(text)}</div>`;}
+function isFixed(day,p){return teacher?.name==='قرناس المطيري'&&day==='الخميس'&&!([1,7].includes(p));}
+function mine(){return bookings.filter(b=>b.teacher_id===teacher.id&&b.status==='booked');}
+function counts(){const out={};mine().forEach(b=>out[b.assignment_id]=(out[b.assignment_id]||0)+1);return out;}
+function render(){
+ $('teacherName').textContent=teacher.name;
+ $('teacherMeta').innerHTML=`النصاب: <b>${teacher.required_lessons}</b> حصة ${teacher.gold_day?`<span class="pill gold">⭐ اليوم الذهبي: ${esc(teacher.gold_day)}</span>`:''} ${teacher.name==='قرناس المطيري'?'<span class="pill gold">الخميس: الأولى والسابعة فقط</span>':''}`;
+ const my=mine();$('required').textContent=teacher.required_lessons;$('booked').textContent=my.length;$('remaining').textContent=Math.max(0,teacher.required_lessons-my.length);
+ const c=counts();
+ $('assignments').innerHTML=assignments.map(a=>{const n=c[a.id]||0;const pct=Math.min(100,Math.round(n/Math.max(1,a.required_lessons)*100));return `<div class="a"><strong>${esc(a.subject)} — ${esc(a.class_name)}</strong><span class="muted">${n} / ${a.required_lessons}</span><div class="progress"><span style="width:${pct}%"></span></div></div>`}).join('')||'<div class="muted">لا توجد إسنادات.</div>';
+ $('assignment').innerHTML=assignments.map(a=>{const n=c[a.id]||0;return `<option value="${a.id}" ${n>=a.required_lessons?'disabled':''}>${esc(a.subject)} — ${esc(a.class_name)} (${n}/${a.required_lessons})</option>`}).join('')||'<option value="">لا توجد إسنادات</option>';
  const rows=[];
  for(let p=1;p<=7;p++){
   let row=`<tr><th>${p}</th>`;
   for(const day of DAYS){
-   const st=slotState(day,p); const b=(model.bookings||[]).find(x=>x.day_name===day&&x.period===p&&x.status==='booked');
-   let text='متاح';
-   if(st==='mine') text=`حجزك${b?.assignment?`<br><span class="small">${escapeHtml(b.assignment.subject)}</span>`:''}`;
-   else if(st==='taken') text=`محجوز<br><span class="small">${escapeHtml(b?.teacher?.name||'معلم')}</span>`;
-   else if(st==='fixed') text='ممنوع';
+   const fixed=isFixed(day,p),b=bookings.find(x=>x.day_name===day&&x.period===p&&x.status==='booked');
+   let cls='available',text='متاح'; if(fixed){cls='fixed';text='ممنوع';}
+   else if(b?.teacher_id===teacher.id){cls='mine';text=`حجزك${b.assignment?`<br><span class="small">${esc(b.assignment.subject)} — ${esc(b.assignment.class_name)}</span>`:''}`;}
+   else if(b){cls='taken';text=`محجوز<br><span class="small">${esc(b.teacher?.name||'معلم')}</span>`;}
    const sel=selected&&selected.day===day&&selected.period===p?' selected':'';
-   row+=`<td class="slot ${st}${sel}" data-day="${escapeHtml(day)}" data-period="${p}">${text}</td>`;
+   row+=`<td class="slot ${cls}${sel}" data-day="${esc(day)}" data-period="${p}">${text}</td>`;
   }
   row+='</tr>';rows.push(row);
  }
  $('grid').innerHTML=rows.join('');
- $('grid').querySelectorAll('td').forEach(td=>td.addEventListener('click',()=>{const st=slotState(td.dataset.day,+td.dataset.period);if(!['available','mine'].includes(st))return;selected={day:td.dataset.day,period:+td.dataset.period};$('selectedText').textContent=`المحدد: ${selected.day} — الحصة ${selected.period}`;renderGrid();}));
+ $('grid').querySelectorAll('td').forEach(td=>td.onclick=()=>{if(['available','mine'].includes(td.className.split(' ')[1])){selected={day:td.dataset.day,period:+td.dataset.period};$('selectedText').textContent=`المحدد: ${selected.day} — الحصة ${selected.period}`;render();}});
 }
-function renderHeader(){
- $('teacherName').textContent=model.teacher.name;
- $('teacherMeta').innerHTML=`النصاب: <b>${model.teacher.required_lessons}</b> حصة ${model.teacher.gold_day?`<span class="pill gold">⭐ يوم ذهبي: ${escapeHtml(model.teacher.gold_day)}</span>`:''} ${teacher==='قرناس المطيري'?'<span class="pill gold">الخميس: الأولى والسابعة فقط</span>':''}`;
- const mine=getBookedMine(); $('required').textContent=model.teacher.required_lessons; $('booked').textContent=mine.length; $('remaining').textContent=Math.max(0,model.teacher.required_lessons-mine.length);
- renderAssignments(); renderAssignmentSelect(); renderGrid();
-}
-async function load(showMessage=true){
- try{model=await api(`?teacher=${encodeURIComponent(teacher)}`);$('status').textContent='متصل';$('status').className='pill online';if(showMessage)$('notice').innerHTML='';renderHeader();}
- catch(e){$('status').textContent='تعذر الاتصال';$('status').className='pill offline';setNotice(escapeHtml(e.message),'bad');}
+async function load(){
+ const [{data:t,error:te},{data:a,error:ae},{data:b,error:be}]=await Promise.all([
+  sb.from('teachers').select('id,name,required_lessons,gold_day,gold_last_period').eq('name',teacherName).maybeSingle(),
+  sb.from('teacher_assignments').select('id,teacher_id,class_name,subject,required_lessons').order('class_name'),
+  sb.from('lesson_bookings').select('id,teacher_id,day_name,period,assignment_id,class_name,status,teacher:teacher_id(name),assignment:assignment_id(subject,class_name)').eq('status','booked')
+ ]);
+ if(te||ae||be){$('status').textContent='تعذر الاتصال';$('status').className='pill bad';show(te?.message||ae?.message||be?.message||'تعذر تحميل البيانات','bad');return;}
+ if(!t){show('المعلم غير موجود في النظام.','bad');return;}
+ teacher=t;assignments=(a||[]).filter(x=>x.teacher_id===t.id);bookings=b||[];$('status').textContent='متصل';$('status').className='pill ok';render();
 }
 async function book(){
- if(!selected){setNotice('اختر خانة من الجدول أولًا.','warn','actionMessage');return;}
- const aid=$('assignment').value;if(!aid){setNotice('اختر مقررًا أولًا.','warn','actionMessage');return;}
- try{await api('',{method:'POST',body:JSON.stringify({teacher,assignment_id:aid,day_name:selected.day,period:selected.period})});selected=null;$('selectedText').textContent='تم الحجز.';setNotice('تم حجز الحصة بنجاح ✅','ok','actionMessage');await load(false);}catch(e){setNotice(escapeHtml(e.message),'bad','actionMessage');await load(false)}
+ if(!selected){show('اختر خانة أولًا.','warn','actionMessage');return;}
+ if(isFixed(selected.day,selected.period)){show('هذه الخانة ممنوعة حسب قواعد المعلم.','bad','actionMessage');return;}
+ const aid=$('assignment').value;const a=assignments.find(x=>x.id===aid);if(!a){show('اختر مقررًا صالحًا.','warn','actionMessage');return;}
+ const my=mine();if(my.length>=teacher.required_lessons){show('اكتمل نصابك بالفعل.','bad','actionMessage');return;}
+ if(my.filter(x=>x.assignment_id===a.id).length>=a.required_lessons){show('اكتمل عدد حصص هذا المقرر.','bad','actionMessage');return;}
+ if(bookings.some(x=>x.day_name===selected.day&&x.period===selected.period&&x.status==='booked')){show('الخانة محجوزة الآن من معلم آخر.','bad','actionMessage');return;}
+ const ins=await sb.from('lesson_bookings').insert({teacher_id:teacher.id,day_name:selected.day,period:selected.period,assignment_id:a.id,class_name:a.class_name,status:'booked'}).select('id').single();
+ if(ins.error){show(ins.error.code==='23505'?'الخانة أو الفصل محجوز للتو.':ins.error.message,'bad','actionMessage');await load();return;}
+ selected=null;show('تم الحجز بنجاح ✅');await load();
 }
 async function release(){
- if(!selected){setNotice('اختر خانة من حجوزاتك أولًا.','warn','actionMessage');return;}
- try{await api('',{method:'DELETE',body:JSON.stringify({teacher,day_name:selected.day,period:selected.period})});selected=null;$('selectedText').textContent='تم الإلغاء.';setNotice('تم إلغاء الحجز.','ok','actionMessage');await load(false);}catch(e){setNotice(escapeHtml(e.message),'bad','actionMessage');}
+ if(!selected){show('اختر خانة من حجوزاتك أولًا.','warn','actionMessage');return;}
+ const b=bookings.find(x=>x.teacher_id===teacher.id&&x.day_name===selected.day&&x.period===selected.period&&x.status==='booked');if(!b){show('هذه الخانة ليست محجوزة لك.','warn','actionMessage');return;}
+ const del=await sb.from('lesson_bookings').delete().eq('id',b.id).eq('teacher_id',teacher.id);
+ if(del.error){show(del.error.message,'bad','actionMessage');return;}selected=null;show('تم إلغاء الحجز.');await load();
 }
 $('bookBtn').onclick=book;$('releaseBtn').onclick=release;$('backBtn').onclick=()=>location.href='index.html';
-if(!teacher){setNotice('لم يتم تحديد المعلم. افتح الصفحة من قائمة المعلمين.','bad');}else{load();pollTimer=setInterval(()=>load(false),3000);}
+if(!teacherName)show('لم يتم تحديد المعلم.','bad');else{load();timer=setInterval(load,3000);}
 </script>
 </body></html>
