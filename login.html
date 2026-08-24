@@ -6,70 +6,24 @@
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--blue:#2563eb;--dark:#17365d}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Tahoma,Arial,sans-serif;color:var(--ink)}
-.wrap{max-width:520px;margin:40px auto;padding:16px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 8px 30px #0000000b}
-.hero{background:linear-gradient(135deg,#17365d,#28547f);color:#fff}.hero h1{margin:0 0 8px}.hero p{margin:0;color:#dbe7f4;font-size:13px}
-.name{margin:14px 0;padding:14px;border-radius:10px;background:#f5f8fc;font-weight:900;font-size:22px}.mode{font-size:15px;margin:8px 0}.hint{font-size:13px;color:var(--muted);line-height:1.8}
-.pin{width:100%;padding:15px;border:1px solid #cbd5e1;border-radius:10px;text-align:center;font-size:22px;margin:8px 0}.btn{width:100%;border:0;border-radius:10px;padding:14px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}
-.secondary{background:#eef2f7;color:var(--ink);margin-top:8px}.dark{background:#17365d}.alert{padding:11px;border-radius:10px;margin-top:10px;line-height:1.7}.ok{background:#ecfdf3;color:#067647}.bad{background:#fef3f2;color:#b42318}.hidden{display:none!important}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="card hero"><h1>دخول المعلم</h1><p id="heroText">جارٍ التحقق من حالة الحساب…</p></div>
-  <div class="card">
-    <div id="name" class="name">جاري تحديد المعلم…</div>
-    <div id="mode" class="mode">جارٍ التحقق…</div>
-    <div id="hint" class="hint"></div>
-    <input id="pin1" class="pin" type="password" autocomplete="current-password" placeholder="اكتب الرمز السري">
-    <input id="pin2" class="pin hidden" type="password" autocomplete="new-password" placeholder="تأكيد الرمز السري">
-    <button id="loginBtn" class="btn">دخول</button>
-    <button id="setupBtn" class="btn dark hidden">إنشاء الرمز والدخول</button>
-    <button id="back" class="btn secondary">العودة</button>
-    <div id="msg"></div>
-  </div>
-</div>
+.wrap{max-width:520px;margin:40px auto;padding:16px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 8px 30px #0000000b}.hero{background:linear-gradient(135deg,#17365d,#28547f);color:#fff}.hero h1{margin:0 0 8px}.hero p{margin:0;color:#dbe7f4;font-size:13px}.name{margin:14px 0;padding:14px;border-radius:10px;background:#f5f8fc;font-weight:900;font-size:22px}.mode{font-size:15px;margin:8px 0}.hint{font-size:13px;color:var(--muted);line-height:1.8}.pin{width:100%;padding:15px;border:1px solid #cbd5e1;border-radius:10px;text-align:center;font-size:22px;margin:8px 0}.btn{width:100%;border:0;border-radius:10px;padding:14px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.secondary{background:#eef2f7;color:var(--ink);margin-top:8px}.dark{background:#17365d}.alert{padding:11px;border-radius:10px;margin-top:10px;line-height:1.7}.ok{background:#ecfdf3;color:#067647}.bad{background:#fef3f2;color:#b42318}.hidden{display:none!important}
+</style></head><body>
+<div class="wrap"><div class="card hero"><h1>دخول المعلم</h1><p id="heroText">جارٍ التحقق من حالة الحساب…</p></div><div class="card">
+<div id="name" class="name">جاري تحديد المعلم…</div><div id="mode" class="mode">جارٍ التحقق…</div><div id="hint" class="hint"></div>
+<input id="pin1" class="pin" type="password" autocomplete="current-password" placeholder="اكتب الرمز السري"><input id="pin2" class="pin hidden" type="password" autocomplete="new-password" placeholder="تأكيد الرمز السري">
+<button id="loginBtn" class="btn">دخول</button><button id="setupBtn" class="btn dark hidden">إنشاء الرمز والدخول</button><button id="back" class="btn secondary">العودة</button><div id="msg"></div></div></div>
 <script>
-const SUPABASE_URL='https://yqbhxeotqbyygbntazws.supabase.co';
-const SUPABASE_KEY='sb_publishable_1N-Q_hswv_veUAZkIUD3zw_iv4Z-C9e';
-const q=new URLSearchParams(location.search);
-const teacherId=q.get('teacher_id')||'';
-const teacherName=q.get('teacher')||'المعلم';
-const SESSION_KEY='teacher_session_'+teacherName;
-const $=id=>document.getElementById(id);
+const SUPABASE_URL='https://yqbhxeotqbyygbntazws.supabase.co',SUPABASE_KEY='sb_publishable_1N-Q_hswv_veUAZkIUD3zw_iv4Z-C9e';
+const q=new URLSearchParams(location.search),teacherId=q.get('teacher_id')||'',teacherName=q.get('teacher')||'المعلم',SESSION_KEY='teacher_session_'+teacherName;$=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
-function show(t,k='bad'){$('msg').innerHTML='<div class="alert '+k+'">'+esc(t)+'</div>'}
-function setBusy(b){$('loginBtn').disabled=b;$('setupBtn').disabled=b}
-function headers(){return {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Accept':'application/json'}}
-async function api(path,opts={}){
- const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),12000);
- try{
-  const r=await fetch(SUPABASE_URL+path,{...opts,headers:{...headers(),...(opts.headers||{})},signal:controller.signal,cache:'no-store'});
-  const text=await r.text(); let data=null; try{data=text?JSON.parse(text):null}catch{}
-  if(!r.ok) throw new Error(data?.message||data?.error_description||data?.hint||data?.details||text||('HTTP '+r.status));
-  return data;
- }catch(e){if(e.name==='AbortError')throw new Error('انتهت مهلة الاتصال بقاعدة البيانات.');throw e}finally{clearTimeout(timer)}
-}
-async function checkPinState(){
- const r=await api('/rest/v1/rpc/teacher_has_pin',{method:'POST',body:JSON.stringify({p_teacher_id:teacherId})});
- const row=Array.isArray(r)?r[0]:r; if(!row?.ok) throw new Error('تعذر التحقق من حالة حساب المعلم.'); return !!row.has_pin;
-}
+function show(t,k='bad'){$('msg').innerHTML='<div class="alert '+k+'">'+esc(t)+'</div>'}function busy(v){$('loginBtn').disabled=v;$('setupBtn').disabled=v}
+function apiUrl(path){return SUPABASE_URL+path+(path.includes('?')?'&':'?')+'apikey='+encodeURIComponent(SUPABASE_KEY)}
+async function api(path,opt={}){const c=new AbortController(),tm=setTimeout(()=>c.abort(),12000);try{const r=await fetch(apiUrl(path),{...opt,headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Accept':'application/json',...(opt.headers||{})},signal:c.signal,cache:'no-store'});const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch{}if(!r.ok)throw new Error(d?.message||d?.hint||d?.details||t||('HTTP '+r.status));return d}catch(e){if(e.name==='AbortError')throw new Error('انتهت مهلة الاتصال بقاعدة البيانات.');throw e}finally{clearTimeout(tm)}}
+async function check(){const d=await api('/rest/v1/rpc/teacher_has_pin',{method:'POST',body:JSON.stringify({p_teacher_id:teacherId})});const r=Array.isArray(d)?d[0]:d;return !!r}
 function go(token){localStorage.setItem(SESSION_KEY,token);location.replace('teacher.html?teacher='+encodeURIComponent(teacherName)+'&teacher_id='+encodeURIComponent(teacherId)+'&v='+Date.now())}
-async function login(){
- const p=$('pin1').value;if(!teacherId)return show('رابط المعلم غير صحيح.');if(!p)return show('اكتب الرمز السري أولًا.');setBusy(true);
- try{const r=await api('/rest/v1/rpc/teacher_login',{method:'POST',body:JSON.stringify({p_teacher_id:teacherId,p_pin:p})});const row=Array.isArray(r)?r[0]:r;if(!row?.ok)throw new Error(row?.message||'الرمز السري غير صحيح.');go(row.token)}catch(e){show(e.message||'تعذر تسجيل الدخول.')}finally{setBusy(false)}
-}
-function enableSetup(){
- $('loginBtn').classList.add('hidden');$('setupBtn').classList.remove('hidden');$('pin2').classList.remove('hidden');$('pin1').autocomplete='new-password';$('mode').textContent='أول دخول — إنشاء رمز سري';$('heroText').textContent='أنشئ الرمز مرة واحدة، وبعدها يصبح الدخول بالرمز مباشرة.';$('hint').textContent='اختر أي رمز تريده: حرف أو رقم أو كلمة أو خليط. لا يوجد حد لطوله.';$('pin1').focus();
-}
-async function setup(){
- const p=$('pin1').value,c=$('pin2').value;if(!p)return show('اكتب الرمز الذي تريد إنشاءه.');if(p!==c)return show('تأكيد الرمز غير مطابق.');setBusy(true);
- try{const r=await api('/rest/v1/rpc/teacher_set_initial_pin',{method:'POST',body:JSON.stringify({p_teacher_id:teacherId,p_pin:p})});const row=Array.isArray(r)?r[0]:r;if(!row?.ok)throw new Error(row?.message||'تعذر إنشاء الرمز.');const lr=await api('/rest/v1/rpc/teacher_login',{method:'POST',body:JSON.stringify({p_teacher_id:teacherId,p_pin:p})});const l=Array.isArray(lr)?lr[0]:lr;if(!l?.ok)throw new Error(l?.message||'تم إنشاء الرمز لكن تعذر الدخول.');go(l.token)}catch(e){show(e.message||'تعذر إنشاء الرمز.')}finally{setBusy(false)}
-}
-async function init(){
- $('name').textContent=teacherName;if(!teacherId){$('mode').textContent='تعذر تحديد المعلم';$('loginBtn').disabled=true;return}
- try{const has=await checkPinState();if(has){$('mode').textContent='أدخل الرمز السري للدخول';$('heroText').textContent='اكتب رمزك السري وسيتم إدخالك مباشرة إلى جدولك.';$('hint').textContent='هذا المعلم لديه رمز سري مسبقًا.';$('pin1').focus()}else enableSetup()}
- catch(e){$('mode').textContent='أدخل الرمز السري';$('hint').textContent='تعذر قراءة حالة الحساب. يمكنك المحاولة بالرمز أو إنشاء رمز جديد.';$('loginBtn').classList.remove('hidden');$('setupBtn').classList.remove('hidden');$('setupBtn').textContent='أول دخول: إنشاء رمز';$('setupBtn').onclick=enableSetup;$('pin1').focus()}
-}
+async function login(){const p=$('pin1').value;if(!teacherId)return show('رابط المعلم غير صحيح.');if(!p)return show('اكتب الرمز السري أولًا.');busy(true);try{const d=await api('/rest/v1/rpc/teacher_login',{method:'POST',body:JSON.stringify({p_teacher_id:teacherId,p_pin:p})}),r=Array.isArray(d)?d[0]:d;if(!r?.ok)throw new Error(r?.message||'الرمز السري غير صحيح.');go(r.token)}catch(e){show(e.message)}finally{busy(false)}}
+function enableSetup(){$('loginBtn').classList.add('hidden');$('setupBtn').classList.remove('hidden');$('pin2').classList.remove('hidden');$('pin1').autocomplete='new-password';$('mode').textContent='أول دخول — إنشاء رمز سري';$('heroText').textContent='أنشئ الرمز مرة واحدة، وبعدها يصبح الدخول بالرمز مباشرة.';$('hint').textContent='اختر أي رمز تريده، بدون حد لطول الرمز.';$('pin1').focus()}
+async function setup(){const p=$('pin1').value,c=$('pin2').value;if(!p)return show('اكتب الرمز الذي تريد إنشاءه.');if(p!==c)return show('تأكيد الرمز غير مطابق.');busy(true);try{const d=await api('/rest/v1/rpc/teacher_set_initial_pin',{method:'POST',body:JSON.stringify({p_teacher_id:teacherId,p_pin:p})}),r=Array.isArray(d)?d[0]:d;if(!r?.ok)throw new Error(r?.message||'تعذر إنشاء الرمز.');const ld=await api('/rest/v1/rpc/teacher_login',{method:'POST',body:JSON.stringify({p_teacher_id:teacherId,p_pin:p})}),lr=Array.isArray(ld)?ld[0]:ld;if(!lr?.ok)throw new Error(lr?.message||'تم إنشاء الرمز لكن تعذر الدخول.');go(lr.token)}catch(e){show(e.message)}finally{busy(false)}}
+async function init(){$('name').textContent=teacherName;if(!teacherId){$('mode').textContent='تعذر تحديد المعلم';$('loginBtn').disabled=true;return}try{if(await check()){$('mode').textContent='أدخل الرمز السري للدخول';$('heroText').textContent='اكتب رمزك السري وسيتم إدخالك مباشرة إلى جدولك.';$('hint').textContent='هذا المعلم لديه رمز سري مسبقًا.';$('pin1').focus()}else enableSetup()}catch(e){$('mode').textContent='تعذر التحقق من حالة الحساب';$('hint').textContent='يمكنك إدخال الرمز أو إنشاء رمز لأول مرة.';$('setupBtn').classList.remove('hidden');$('setupBtn').textContent='أول دخول: إنشاء رمز';$('setupBtn').onclick=enableSetup;$('pin1').focus()}}
 $('loginBtn').onclick=login;$('setupBtn').onclick=setup;$('pin1').addEventListener('keydown',e=>{if(e.key==='Enter')($('pin2').classList.contains('hidden')?login():setup())});$('pin2').addEventListener('keydown',e=>{if(e.key==='Enter')setup()});$('back').onclick=()=>location.replace('index.html');init();
-</script>
-</body></html>
+</script></body></html>
